@@ -1,0 +1,52 @@
+# onBoard Leds
+NET "LED[0]" LOC = "U18" | SLEW = FAST; # Bank = 1, Pin name = IO_L52N_M1DQ15, 	   Sch name = LD0
+NET "LED[1]" LOC = "M14" | SLEW = FAST; # Bank = 1, Pin name = IO_L53P, 		 	   Sch name = LD1
+NET "LED[2]" LOC = "N14" | SLEW = FAST; # Bank = 1, Pin name = IO_L53N_VREF, 	   Sch name = LD2
+NET "LED[3]" LOC = "L14" | SLEW = FAST; # Bank = 1, Pin name = IO_L61P, 		 	   Sch name = LD3
+NET "LED[4]" LOC = "M13" | SLEW = FAST; # Bank = 1, Pin name = IO_L61N, 		 	   Sch name = LD4
+NET "LED[5]" LOC = "D4"  | SLEW = FAST;  # Bank = 0, Pin name = IO_L1P_HSWAPEN_0,	   Sch name = HSWAP/LD5
+NET "LED[6]" LOC = "P16" | SLEW = FAST; # Bank = 1, Pin name = IO_L74N_DOUT_BUSY_1, Sch name = LD6
+NET "LED[7]" LOC = "N12" | SLEW = FAST; # Bank = 2, Pin name = IO_L13P_M1_2,		   Sch name = M1/LD7
+
+# onBoard PUSH BUTTONS 
+#NET "BTN<0>" LOC = "N4";  # Bank = 3, Pin name = IO_L1P, 	   		   Sch name = BTNU
+#NET "BTN<1>" LOC = "P4";  # Bank = 3, Pin name = IO_L2P, 	   		   Sch name = BTNL
+#NET "BTN<2>" LOC = "P3";  # Bank = 3, Pin name = IO_L2N, 	   		   Sch name = BTND
+#NET "BTN<3>" LOC = "F6";  # Bank = 3, Pin name = IO_L55P_M3A13, 	   Sch name = BTNR
+#NET "BTN<4>" LOC = "F5";  # Bank = 3, Pin name = IO_L55N_M3A14, 	   Sch name = BTNC
+NET "Reset" LOC = "T15"; #Reset button
+
+#VHDC connector
+//NET "clk_out"  LOC = "U5"| SLEW = FAST; # Bank = 2,  Pin name = IO_L2P_CMPCLK,        	Sch name = EXP-IO1_P
+
+NET "cmd[0]"  LOC = "N6" | SLEW = FAST;# Bank = 2,  Pin name = *IO_L5P,        		Sch name = EXP-IO2_P
+NET "cmd[1]"  LOC = "R7" | SLEW = FAST;# Bank = 2,  Pin name = IO_L14P_D11,        	Sch name = EXP-IO3_P
+NET "cmd[2]"  LOC = "T6" | SLEW = FAST;# Bank = 2,  Pin name = *IO_L15P,        		Sch name = EXP-IO4_P
+#NET "cmd[3]"  LOC = "N7" | SLEW = FAST;# Bank = 2,  Pin name = IO_L16P,        		Sch name = EXP-IO5_P
+NET "cmd[3]"  LOC = "T3" | SLEW = FAST;# Bank = 2,  Pin name = IO_L16P,        		Sch name = EXP-IO5_P
+NET "cmd[4]"  LOC = "U7" | SLEW = FAST;# Bank = 2,  Pin name = *IO_L19P,        		Sch name = EXP-IO6_P
+NET "cmd[5]"  LOC = "U8" | SLEW = FAST;# Bank = 2,  Pin name = *IO_L20P,        		Sch name = EXP-IO7_P
+NET "cmd[6]"  LOC = "M8" | SLEW = FAST;# Bank = 2,  Pin name = *IO_L22P,        		Sch name = EXP-IO8_P
+NET "cmd[7]"  LOC = "R8" | SLEW = FAST;# Bank = 2,  Pin name = IO_L23P,        		Sch name = EXP-IO9_P
+#NET "data_in"  LOC = "U16"; # Bank = 2,  Pin name = IO_L29P_GCLK3,        	Sch name = EXP-IO10_P
+NET "data_in"  LOC = "V9"; # Bank = 2,  Pin name = IO_L29P_GCLK3,        	Sch name = EXP-IO10_P
+
+NET "rx_idle" LOC = "U15";  # Bank = 2,  Pin name = *IO_L44P,        		Sch name = EXP-IO16_P
+NET "rx_packet" LOC = "U13";  # Bank = 2,  Pin name = IO_L45P,        		Sch name = EXP-IO17_P
+
+# onBoard SWITCHES
+#NET "SW0" LOC = "A10" | IOSTANDARD = LVCMOS25; # Bank = 0, Pin name = IO_L37N_GCLK12,      	Sch name = SW0
+#NET "SW1" LOC = "D14" | IOSTANDARD = LVCMOS25; # Bank = 0, Pin name = IO_L65P_SCP3,      	Sch name = SW1
+#NET "SW2" LOC = "C14"; # Bank = 0, Pin name = IO_L65N_SCP2,      	Sch name = SW2
+#NET "SW<3>" LOC = "P15"; # Bank = 1, Pin name = IO_L74P_AWAKE_1,       Sch name = SW3
+#NET "SW<4>" LOC = "P12"; # Bank = 2, Pin name = IO_L13N_D10,      		Sch name = SW4
+#NET "SW<5>" LOC = "R5";  # Bank = 2, Pin name = IO_L48P_D7,      		Sch name = SW5
+#NET "SW<6>" LOC = "T5";  # Bank = 2, Pin name = IO_L48N_RDWR_B_VREF_2, Sch name = SW6
+#NET "SW<7>" LOC = "E4";  # Bank = 3, Pin name = IO_L54P_M3RESET,       Sch name = SW7
+
+# USB UART Connector
+NET "UartRx_pin" LOC = "A16" | IOSTANDARD = LVCMOS25; # Bank = 0, Pin name = IO_L66N_SCP0, Sch name = USBB-RXD
+NET "UartTx_pin" LOC = "B16" | IOSTANDARD = LVCMOS25; # Bank = 0, Pin name = IO_L66P_SCP1, Sch name = USBB-TXD
+
+# clock pin for Atlys rev C board
+NET "CLK"   LOC = "L15"; # Bank = 1, Pin name = IO_L42P_GCLK7_M1UDM, Type = GCLK, Sch name = GCLK
