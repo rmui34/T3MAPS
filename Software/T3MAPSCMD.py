@@ -8,7 +8,7 @@ from pycallgraph import PyCallGraph
 from pycallgraph.output import GraphvizOutput
 
 BAUD = 9600
-COMPORT = 'COM7'
+COMPORT = '/dev/ptyp3'
 VAL = 500
 TIMEOUT = None;
 #There are some predefined commands:
