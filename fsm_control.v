@@ -34,7 +34,8 @@
     output wr_en2,
     output rd_en1,
     output rd_en2,
-    output tx_en
+	 output tx_en,
+    output reg [7:0] tx_sig_byte
     );
 	 
 //registers below used in FSM and other sequential logic 
@@ -116,7 +117,9 @@ begin: FSM
 						state <= DATA; //remain in data state.
 				end
 			//review this maybe
-			WRITE:if (fifoEmpty1) begin //If fifo1 is empty, then either a write error occured or we
+			WRITE:if (fifoEmpty1) begin //If fifo1 is empty, then either a write error occured or we are done
+					tx_state_sig(.state(state), .enable(1'b1), .tx_busy(tx_busy),
+									 .tx_byte(tx_sig_byte), .tx_en(reg_en_tx));
 					reg_LED[3] <= 1'b1;    //signal write state finishing.
 					state <= IDLE;			  //go back to idle state. 		   
 				end else begin
@@ -148,27 +151,6 @@ begin: FSM
 							reg_LED[4] <= 1'b0;
 						end
 						state <= TRANSMIT;  //keep transmitting. 
-						
-					/*
-						reg_LED[6] <= 1'b0;
-						reg_LED[0] <= 1'b0;
-						reg_en_tx <= 1'b1;
-						if(~tx_busy) begin 
-							reg_rd_en2 <= 1'b1; //enable reading from fifo2
-						end else begin
-							reg_rd_en2 <= 1'b0; //wait for tx
-						end
-						
-						if (rd_ack) begin
-							reg_LED[4] <= 1'b1; //signal the state
-						end
-						else begin 
-							reg_LED[4] <= 1'b0;
-						end
-						
-						reg_en_tx <= 1'b0;
-						state <= TRANSMIT;  //keep transmitting. 
-						*/
 					end		
 			default: state <= IDLE; //This is the default state, waiting for data
 		endcase
@@ -183,10 +165,24 @@ begin: FSM
 			reg_LED[5] <= 1'b0; //otherwise everything is fine. 
 		end
 	end
-	
-	//LED logic below
-	
-	
 end
+
+task tx_state_sig;
+	input [7:0] state;
+	input tx_busy, enable;
+	output reg [7:0] tx_byte;
+	output reg tx_en;
+	begin
+		if(tx_busy) begin
+			tx_en <= 1'b0;
+		end
+		else if (enable) begin
+			tx_en <= 1'b1;
+		end
+		else begin
+			tx_en <= 1'b0;
+		end
+	end
+endtask
 
 endmodule

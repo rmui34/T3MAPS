@@ -33,8 +33,6 @@ module uartControl(
 	output 	[1:0] rx_extra
    );
 
-//wire [10:0] wr_data_count;
-//wire [1:0] rx_extra; //hooked to nothing
 wire [7:0] tx_byte; //Used to prevent sythesis from assuming a 1 bit wire
 wire [7:0] rx_byte; //Used to prevent sythesis from assuming a 1 bit wire
 wire rst; //True reset for modules
@@ -47,16 +45,6 @@ async_transmitter tx_mod(
 	.TxD			(tx),
 	.TxD_busy	(tx_busy)
 );
-
-/*
-UART_TX_CTRL TX(
-	.CLK		(clk_100),
-	.SEND		(tx_en),
-	.DATA		(tx_byte),
-	.READY	(ready),
-	.UART_TX	(tx)
-);
-*/
 
 async_receiver rx_mod(
 	.clk				(clk_100),
@@ -111,6 +99,7 @@ fsm_control fsm1(
 	.tx_busy		(tx_busy),
 	.fifoEmpty1 (fifoEmpty1),
 	.fifoEmpty2 (fifoEmpty2),
+	.tx_sig_byte(tx_sig_byte),
 	.PROBLEM		(PROBLEM)
 	);
 
