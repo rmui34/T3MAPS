@@ -2,6 +2,7 @@
 ##Verilog
 #################
 *.gise
+*.cgp
 *.cdc
 *.wcfg
 *.xps
@@ -16,6 +17,34 @@
 *.xwbt
 *.wdb
 *.debug
+*.vhd
+*.tcl
+*.pdf
+*.veo
+*.asy
+*.sym
+*.nst
+*.ncf
+*.lst
+*.xdc
+*.sh
+*.bat
+*.scr
+*.ngc
+*.cgc
+ipcore_dir/*.ucf
+ipcore_dir/*.v
+ipcore_dir/*.txt
+ipcore_dir/clkout
+ipcore_dir/cmd_fifo
+ipcore_dir/data_in_fifo
+iseconfig/
+xst/
+top*
+xlnx*
+webtalk*
+!top.ucf
+!top.bit
 
 #################
 ## Eclipse
