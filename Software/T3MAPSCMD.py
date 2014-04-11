@@ -28,13 +28,13 @@ class RawConversionException(Exception):
         def __str__(self):
                 return repr(self.value)
 
-def main():
-        port = serial.Serial(port=COMPORT,baudrate=BAUD, bytesize=8,stopbits=1, timeout=TIMEOUT)
-        #rx_test(port)
-        #print("Finished reading out")
+def graph():
         with PyCallGraph(output=GraphvizOutput()):
                 commandString = patternRead()
-        #commandString = testPatten();
+
+def manual(port):
+        port.open()
+        commandString = patternRead()
         byteCMDString = convertCMDString(commandString)
         FPGA_write(port,byteCMDString)
         Winput = raw_input("Write data to T3MAPS? (Y/N): ")
@@ -43,27 +43,35 @@ def main():
                 Winput2 = raw_input("Read data from FGPA fifo? (Y/N): ")
                 if (Winput2 == "Y"):
                         readData(port)
+                        port.close()
                 else:
                         print("Read aborted")
+                        port.close()
         else:
                 print("Write aborted")
+                port.close()
+
+def auto(port):
+        port.open()
+        commandString = patternRead()
+        byteCMDString = convertCMDString(commandString)
+        FPGA_write(port,byteCMDString)
+        check = raw_input("Are you sure you want to run? (Y/N): ")
+        if (check.lower() == "y"):
+                FPGA_write(port, byteCMDString)
+                port.close()
+        else:
+                print("Aborted.")
+                port.close()
 
 def readData(port):
         shiftData = open('shiftData.txt', 'w')
         FPGA_write(port,TRANSMIT,False)
-        port.close()
-        port.open()
         data = port.read(400)
-        #while True:
-         #       bytesToRead = port.inWaiting()
-          #      print(encode(port.read(bytesToRead)))
-        #FPGA_write(port, TX_OFF, False)
         print("Data read")
         print(data)
-        #parseData(data)
         shiftData.write(data)
         shiftData.close()
-        port.close()
 
 def parseData(data):
         parseData_file = open('parsedData.txt', 'w')
@@ -71,8 +79,6 @@ def parseData(data):
                 slice = data[x:x+7]
                 print(len(slice))
                 parseData_file.write('{0:08b}'.format(slice))
-
-
 
 def encode(byte):
         #if(len(byte)==8):
@@ -93,13 +99,9 @@ def onezero(bit):
 
 def convertToRaw(byte):
         if(len(byte) == 8):
-                #print(byte)
                 temp = hex(int(byte, 2)) #Crazy but it works
-                #print(temp)
                 temp2 = temp[2:4]
-                #print('0'+temp2)
                 if (len(temp2) == 1):
-                        #print('here')
                         return ('0'+temp2).decode('hex')
                 else:
                        return temp2.decode('hex')
@@ -110,17 +112,9 @@ def convertCMDString(stringList):
         byteList = ''
         for x in range(0,len(stringList),8):
                 byteList += convertToRaw(stringList[x:x+8])
-        #wait wtf....
-        #list = byteList.split()
-        #list.reverse()
-        #byteList = ''
-        #for i in list:
-        #        byteList += i
         return byteList
 
 def FPGA_write(port, commandString, RX_ON = True):
-        port.close()
-        port.open()
         if(port.isOpen()):
                 if(RX_ON):
                         port.write(convertToRaw(RX))
@@ -131,7 +125,6 @@ def FPGA_write(port, commandString, RX_ON = True):
                         port.write(convertToRaw(commandString))
         else:
                 print("Serial port failure")
-        port.close()
 
 def patternRead():
 
@@ -196,7 +189,6 @@ def patternRead():
 def genFinalBits(stringList):
         finalBytes = ''
         finalBits = []
-        print(stringList[0])
         #stringList = [Dacld, Stbld, SRCK_G, GCfgCK, SRIN_ALL, NU, NU, NU]
         for x in range(VAL-5):
                 for y in (stringList):
@@ -205,7 +197,6 @@ def genFinalBits(stringList):
         return finalBytes.join(finalBits)
 
 def rx_test(port):
-        loopNum = 0
         FPGA_write(port,RX, False)
         for x in range(250):
                 FPGA_write(port, "10101010", False)
@@ -213,7 +204,9 @@ def rx_test(port):
                 print(x)
         FPGA_write(port, RX_OFF, False)
         FPGA_write(port,WRITE,False)
+        port.close()
 
 #Call the main method upon execution.
 if __name__ == "__main__":
-    main()
+        port = serial.Serial(port=COMPORT,baudrate=BAUD, bytesize=8,stopbits=1, timeout=TIMEOUT)
+        manual()
