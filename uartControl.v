@@ -26,6 +26,7 @@ module uartControl(
 	input 	lock,
 	input	 	rx,
 	input 	data,
+	input 	SW0,
 	output 	tx,
 	output 	[7:0] cmd,
 	output 	[7:0] LED,
@@ -95,11 +96,11 @@ fsm_control fsm1(
 	.wr_en2		(wr_en2),
 	.rd_en1		(rd_en1),
 	.rd_en2		(rd_en2),
+	.SW0			(SW0),
 	.tx_en		(tx_en),
 	.tx_busy		(tx_busy),
 	.fifoEmpty1 (fifoEmpty1),
 	.fifoEmpty2 (fifoEmpty2),
-	.tx_sig_byte(tx_sig_byte),
 	.PROBLEM		(PROBLEM)
 	);
 

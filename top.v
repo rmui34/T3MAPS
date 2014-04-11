@@ -25,19 +25,19 @@ module top(
 	 output [7:0] LED, //Status LEDS.	
 	 output uartTx_pin,//Connects to Exar usb-uart bridge.
 	 output clk_out, //5 Mhz clock out. 
-	 output rx_idle,
-	 output rx_packet,
+	 output rx_idle, //Not uses
+	 output rx_packet, //Also, not used
 	 output [10:0] wr_data_count, // output [10 : 0] wr_data_count (keeps optimizer happy)
 	 input uartRx_pin, //Connects to the Exar usb-uart bridge.
     input data_in, //data input from prototype sensor chip
     input CLK, //100Mhz clock from crystal
-    input Reset //Reset button on the ATLYS demo board. (Debounce?)
+    input Reset, //Reset button on the ATLYS demo board.
+	 input SW0
     );
 	 
-wire [1:0] rx_extra;
-//wire [10:0] wr_data_count;
-assign rx_idle = rx_extra[0];
-assign rx_packet = rx_extra[1]; 
+wire [1:0] rx_extra; //Not used
+assign rx_idle = rx_extra[0]; //Ditto
+assign rx_packet = rx_extra[1]; //Still not used
 
 //The module in charge of controlling the uart and fifos. The three clocks are 
 //driven by the PLL built into the Spartan 6 chip. Reset comes from the external
@@ -46,14 +46,15 @@ uartControl control(
 	.clk_100	(clk_100),
 	.clk_25	(clk_25),
 	.clk_5	(clk_5),
-	.Reset	(~Reset),
-	.lock		(lock),
+	.Reset	(~Reset), //VERY important
+	.lock		(lock),   //Sync everything
 	.rx		(uartRx_pin),
 	.tx		(uartTx_pin),
 	.data		(data_in),
 	.cmd		(cmd[7:0]),
 	.LED		(LED[7:0]),
-	.wr_data_count(wr_data_count[10:0]), // output [10 : 0] wr_data_count
+	.SW0     (SW0),
+	.wr_data_count(wr_data_count[10:0]), // output [10 : 0] wr_data_count (Not used, for chipscope)
 	.rx_extra(rx_extra[1:0]) //keeps optimizer happy...not used
 	);
 
@@ -66,7 +67,6 @@ clkout clkgen
     .clk_25			(clk_25),   // OUT - 25 MHz for uart and fifo1 write 	and fifo2 read.
     .clk_5			(clk_5),    // OUT - % MHz for fifo1 read out and fifo2 write.
     .clk_5_out		(clk_5_out),// OUT - % Mhz out to ODDR2 inst.
-	 //.uart_clk		(),
     // Status and control signals
 	 .lock			(lock),
     .Reset			(~Reset));   // IN - Reset Active low on ATLYS
@@ -74,9 +74,8 @@ clkout clkgen
 wire not_clk_5_out;
 assign not_clk_5_out = ~clk_5_out; //setup for ODDR2
 
-
-
 //Because map proccess suggests doing this. 
+//In the future, all output pins will be ODDR2s.
 ODDR2 #(
       .DDR_ALIGNMENT("NONE"),
       .INIT(1'b0),
