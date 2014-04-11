@@ -1,6 +1,5 @@
 __author__ = 'Maximilian Golub'
 import serial
-import io
 import pix
 import chip
 import os
@@ -20,28 +19,32 @@ RX = '11111111'
 RX_OFF = '11111110'
 WRITE = '01111111'
 TRANSMIT = '01111110'
-#TX_OFF = '10101010';
 
 class RawConversionException(Exception):
         def __init__(self, value):
                 self.value = value
         def __str__(self):
                 return repr(self.value)
-
+"""
+Creates a call graph of the pix.py script. Used for reverse engineering only.
+"""
 def graph():
         with PyCallGraph(output=GraphvizOutput()):
                 commandString = patternRead()
 
+"""
+The manual method of controlling T3MAPS. The user must manually verify each step
+"""
 def manual(port):
         port.open()
         commandString = patternRead()
         byteCMDString = convertCMDString(commandString)
         FPGA_write(port,byteCMDString)
-        Winput = raw_input("Write data to T3MAPS? (Y/N): ")
-        if (Winput == "Y"):
+        Winput = raw_input("Write data to T3MAPS? (y/n): ")
+        if (Winput.lower() == "y"):
                 FPGA_write(port,WRITE,False)
-                Winput2 = raw_input("Read data from FGPA fifo? (Y/N): ")
-                if (Winput2 == "Y"):
+                Winput2 = raw_input("Read data from FGPA fifo? (y/n): ")
+                if (Winput2.lower() == "y"):
                         readData(port)
                         port.close()
                 else:
@@ -51,6 +54,9 @@ def manual(port):
                 print("Write aborted")
                 port.close()
 
+"""
+Automatic mathod of controlling T3MAPS, once confirmed, an entire pattern will be written to the FPGA.
+"""
 def auto(port):
         port.open()
         commandString = patternRead()
@@ -64,6 +70,9 @@ def auto(port):
                 print("Aborted.")
                 port.close()
 
+"""
+Reads data from the serial port to a file.
+"""
 def readData(port):
         shiftData = open('shiftData.txt', 'w')
         FPGA_write(port,TRANSMIT,False)
@@ -73,6 +82,9 @@ def readData(port):
         shiftData.write(data)
         shiftData.close()
 
+"""
+Not used
+"""
 def parseData(data):
         parseData_file = open('parsedData.txt', 'w')
         for x in xrange(0, len(data), 8):
@@ -80,6 +92,9 @@ def parseData(data):
                 print(len(slice))
                 parseData_file.write('{0:08b}'.format(slice))
 
+"""
+Not used
+"""
 def encode(byte):
         #if(len(byte)==8):
         temp = ""
@@ -88,6 +103,9 @@ def encode(byte):
         #        print(len(byte))
         #        raise RawConversionException
 
+"""
+Not used
+"""
 def onezero(bit):
         byteS = ""
         for x in bit:
@@ -97,6 +115,10 @@ def onezero(bit):
                         byteS += "0"
         return byteS[::-1]
 
+"""
+Converts 8 bits into a format that pyserial
+will convert into the correct pattern
+"""
 def convertToRaw(byte):
         if(len(byte) == 8):
                 temp = hex(int(byte, 2)) #Crazy but it works
@@ -108,12 +130,22 @@ def convertToRaw(byte):
         else:
                 raise RawConversionException
 
+"""
+Takes a string and converts it entirely to the raw bit format
+using the above method.
+"""
 def convertCMDString(stringList):
         byteList = ''
         for x in range(0,len(stringList),8):
                 byteList += convertToRaw(stringList[x:x+8])
         return byteList
 
+"""
+Writes data to the FPGA system using pyserial.
+By default, the method will assume that you
+need to use the RX flag. For testing purposes, using RX_ON
+False will result in just the byte you specify being sent.
+"""
 def FPGA_write(port, commandString, RX_ON = True):
         if(port.isOpen()):
                 if(RX_ON):
@@ -126,6 +158,10 @@ def FPGA_write(port, commandString, RX_ON = True):
         else:
                 print("Serial port failure")
 
+"""
+Generates the bit pattern from pix.py, then returns that pattern
+as a bitarray.
+"""
 def patternRead():
 
         Dacld = ""
@@ -186,19 +222,25 @@ def patternRead():
         shiftData.close()
         return genFinalBits(stringList)
 
+"""
+takes a 2d array and creates a string that is the serial
+representation of that array.
+"""
 def genFinalBits(stringList):
         finalBytes = ''
         finalBits = []
         #stringList = [Dacld, Stbld, SRCK_G, GCfgCK, SRIN_ALL, NU, NU, NU]
         for x in range(VAL-5):
                 for y in (stringList):
-                        #print(x)
                         finalBits.append(y[x])
         return finalBytes.join(finalBits)
 
+"""
+Generates a clock pattern for testing.
+"""
 def rx_test(port):
         FPGA_write(port,RX, False)
-        for x in range(250):
+        for x in range(500):
                 FPGA_write(port, "10101010", False)
                 FPGA_write(port, "01010101", False)
                 print(x)
