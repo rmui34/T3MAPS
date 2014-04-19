@@ -5,6 +5,7 @@ import chip
 import os
 from pycallgraph import PyCallGraph
 from pycallgraph.output import GraphvizOutput
+import threading
 
 BAUD = 9600
 COMPORT = 'COM7'
@@ -52,20 +53,24 @@ def manual(port):
                         port.close()
         else:
                 print("Write aborted")
-                port.close()
+                port.close() #hopefully kills the other process...
 
 """
 Automatic mathod of controlling T3MAPS, once confirmed, an entire pattern will be written to the FPGA.
 """
 def auto(port):
         port.open()
+        read_thread = threading.Thread(target=readData(), args=port)
+        read_thread.start()
         commandString = patternRead()
         byteCMDString = convertCMDString(commandString)
         FPGA_write(port,byteCMDString)
         check = raw_input("Are you sure you want to run? (Y/N): ")
         if (check.lower() == "y"):
                 FPGA_write(port, byteCMDString)
-                port.close()
+                while(read_thread.is_alive):
+                       pass
+                 port.close()
         else:
                 print("Aborted.")
                 port.close()
@@ -76,10 +81,7 @@ Reads data from the serial port to a file.
 def readData(port):
         shiftData = open('shiftData.txt', 'w')
         FPGA_write(port,TRANSMIT,False)
-        data = port.read(400)
-        print("Data read")
-        print(data)
-        shiftData.write(data)
+        shiftData.write(port.read(400))
         shiftData.close()
 
 """
