@@ -28,7 +28,7 @@ NET "rx_idle" LOC = "U15";  # Bank = 2,  Pin name = *IO_L44P,        		Sch name 
 NET "rx_packet" LOC = "U13";  # Bank = 2,  Pin name = IO_L45P,        		Sch name = EXP-IO17_P
 
 # onBoard SWITCHES
-#NET "SW0" LOC = "A10" | IOSTANDARD = LVCMOS25; # Bank = 0, Pin name = IO_L37N_GCLK12,      	Sch name = SW0
+NET "SW0" LOC = "A10" | IOSTANDARD = LVCMOS25; # Bank = 0, Pin name = IO_L37N_GCLK12,      	Sch name = SW0
 #NET "SW1" LOC = "D14" | IOSTANDARD = LVCMOS25; # Bank = 0, Pin name = IO_L65P_SCP3,      	Sch name = SW1
 #NET "SW2" LOC = "C14"; # Bank = 0, Pin name = IO_L65N_SCP2,      	Sch name = SW2
 #NET "SW<3>" LOC = "P15"; # Bank = 1, Pin name = IO_L74P_AWAKE_1,       Sch name = SW3

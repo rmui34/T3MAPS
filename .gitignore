@@ -43,6 +43,7 @@ xst/
 top*
 xlnx*
 webtalk*
+isim/
 !top.ucf
 !top.bit
 

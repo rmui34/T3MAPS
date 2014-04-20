@@ -123,7 +123,6 @@ begin: FSM
 						end
 						if(wr_ack) begin //make sure double write does not occur
 							reg_wr_en1 <= 0; 
-							reg_LED[6] <= 1'b1; //make it blink a lot
 						end
 						reg_LED[7] <= 1'b1; //(Why is this here???)
 						reg_LED[1] <= 1'b1; //enable LED1 to indicate state. 
@@ -152,7 +151,7 @@ begin: FSM
 					state <= WRITE;        //remain in write state.
 				end
 			//transmit data stored in fifo2 to uart
-			TRANSMIT: if (fifoEmpty2 && ~tx_busy & SW0) begin //stop transmitting. This may need to be modifed.
+			TRANSMIT: if (fifoEmpty2 & ~tx_busy & rx_byte == 8'b10111111) begin //stop transmitting. This may need to be modifed.
 					state <= IDLE; //Go back to idle state. Should rewrite to avoid sending a signal...
 					reg_LED[6] <= 1'b1; //Signal Transmit finished. 
 					end else begin

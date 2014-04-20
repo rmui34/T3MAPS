@@ -8,7 +8,7 @@ from pycallgraph.output import GraphvizOutput
 import threading
 
 BAUD = 9600
-COMPORT = 'COM7'
+COMPORT = 'COM3'
 VAL = 500
 TIMEOUT = None;
 #There are some predefined commands:
@@ -59,18 +59,18 @@ def manual(port):
 Automatic mathod of controlling T3MAPS, once confirmed, an entire pattern will be written to the FPGA.
 """
 def auto(port):
+        port.close()
         port.open()
-        read_thread = threading.Thread(target=readData(), args=port)
+        read_thread = threading.Thread(target=readData, args=port)
         read_thread.start()
         commandString = patternRead()
         byteCMDString = convertCMDString(commandString)
-        FPGA_write(port,byteCMDString)
         check = raw_input("Are you sure you want to run? (Y/N): ")
         if (check.lower() == "y"):
                 FPGA_write(port, byteCMDString)
                 while(read_thread.is_alive):
                        pass
-                 port.close()
+                port.close()
         else:
                 print("Aborted.")
                 port.close()
@@ -253,4 +253,4 @@ def rx_test(port):
 #Call the main method upon execution.
 if __name__ == "__main__":
         port = serial.Serial(port=COMPORT,baudrate=BAUD, bytesize=8,stopbits=1, timeout=TIMEOUT)
-        manual()
+        auto(port)
