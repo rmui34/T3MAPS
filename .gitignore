@@ -52,6 +52,7 @@ webtalk*
 isim/
 !top.ucf
 !top.bit
+!T3MAPS.html
 
 #################
 ## Eclipse
