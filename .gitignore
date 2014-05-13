@@ -4,6 +4,9 @@
 *.gise
 *.cgp
 *.cdc
+*.ini
+*.prj
+*.exe
 *.wcfg
 *.xps
 *.log
@@ -39,6 +42,9 @@ ipcore_dir/clkout
 ipcore_dir/cmd_fifo
 ipcore_dir/data_in_fifo
 iseconfig/
+Software/.idea
+Software/shiftData.txt
+Software/shiftData_before.txt
 xst/
 top*
 xlnx*

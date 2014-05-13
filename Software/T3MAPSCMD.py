@@ -3,8 +3,6 @@ import serial
 import pix
 import chip
 import os
-from pycallgraph import PyCallGraph
-from pycallgraph.output import GraphvizOutput
 import threading
 
 BAUD = 9600
@@ -20,6 +18,7 @@ RX = '11111111'
 RX_OFF = '11111110'
 WRITE = '01111111'
 TRANSMIT = '01111110'
+TRANSMIT_OFF = '10111111'
 
 class RawConversionException(Exception):
         def __init__(self, value):
@@ -29,14 +28,17 @@ class RawConversionException(Exception):
 """
 Creates a call graph of the pix.py script. Used for reverse engineering only.
 """
+"""
 def graph():
         with PyCallGraph(output=GraphvizOutput()):
                 commandString = patternRead()
+"""
 
 """
 The manual method of controlling T3MAPS. The user must manually verify each step
 """
 def manual(port):
+        port.close()
         port.open()
         commandString = patternRead()
         byteCMDString = convertCMDString(commandString)
@@ -79,10 +81,11 @@ def auto(port):
 Reads data from the serial port to a file.
 """
 def readData(port):
-        shiftData = open('shiftData.txt', 'w')
+        shiftData = open('shiftData.txt', 'wb')
         FPGA_write(port,TRANSMIT,False)
-        shiftData.write(port.read(400))
+        shiftData.write(port.read(490))
         shiftData.close()
+        print("Here")
 
 """
 Not used
@@ -248,9 +251,11 @@ def rx_test(port):
                 print(x)
         FPGA_write(port, RX_OFF, False)
         FPGA_write(port,WRITE,False)
+        readData(port)
         port.close()
 
 #Call the main method upon execution.
 if __name__ == "__main__":
-        port = serial.Serial(port=COMPORT,baudrate=BAUD, bytesize=8,stopbits=1, timeout=TIMEOUT)
-        auto(port)
+    port = serial.Serial(port=COMPORT,baudrate=BAUD, bytesize=8,stopbits=1, timeout=TIMEOUT)
+    manual(port)
+    #rx_test(port)

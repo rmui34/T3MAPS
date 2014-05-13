@@ -151,7 +151,7 @@ begin: FSM
 					state <= WRITE;        //remain in write state.
 				end
 			//transmit data stored in fifo2 to uart
-			TRANSMIT: if (fifoEmpty2 & ~tx_busy & rx_byte == 8'b10111111) begin //stop transmitting. This may need to be modifed.
+			TRANSMIT: if (fifoEmpty2 & ~tx_busy) begin //stop transmitting. This may need to be modifed.
 					state <= IDLE; //Go back to idle state. Should rewrite to avoid sending a signal...
 					reg_LED[6] <= 1'b1; //Signal Transmit finished. 
 					end else begin

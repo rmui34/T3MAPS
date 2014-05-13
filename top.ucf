@@ -12,20 +12,19 @@ NET "Reset" LOC = "T15"; #Reset button
 
 #VHDC connector
 //NET "clk_out"  LOC = "U5"| SLEW = FAST; # Bank = 2,  Pin name = IO_L2P_CMPCLK,        	Sch name = EXP-IO1_P
-NET "cmd[0]"  LOC = "N6" | SLEW = FAST;# Bank = 2,  Pin name = *IO_L5P,        		Sch name = EXP-IO2_P
-NET "cmd[1]"  LOC = "R7" | SLEW = FAST;# Bank = 2,  Pin name = IO_L14P_D11,        	Sch name = EXP-IO3_P
-NET "cmd[2]"  LOC = "T6" | SLEW = FAST;# Bank = 2,  Pin name = *IO_L15P,        		Sch name = EXP-IO4_P
-NET "cmd[3]"  LOC = "N7" | SLEW = FAST;# Bank = 2,  Pin name = IO_L16P,        		Sch name = EXP-IO5_P
-#NET "cmd[3]"  LOC = "T3" | SLEW = FAST;# Bank = 2,  Pin name = IO_L16P,        		Sch name = EXP-IO5_P
-NET "cmd[4]"  LOC = "U7" | SLEW = FAST;# Bank = 2,  Pin name = *IO_L19P,        		Sch name = EXP-IO6_P
-NET "cmd[5]"  LOC = "U8" | SLEW = FAST;# Bank = 2,  Pin name = *IO_L20P,        		Sch name = EXP-IO7_P
-NET "cmd[6]"  LOC = "M8" | SLEW = FAST;# Bank = 2,  Pin name = *IO_L22P,        		Sch name = EXP-IO8_P
-NET "cmd[7]"  LOC = "R8" | SLEW = FAST;# Bank = 2,  Pin name = IO_L23P,        		Sch name = EXP-IO9_P
-NET "data_in"  LOC = "U16"; # Bank = 2,  Pin name = IO_L29P_GCLK3,        	Sch name = EXP-IO10_P
+NET "cmd[0]"  LOC = "U13" | SLEW = SLOW | DRIVE = 16;# Bank = 2,  Pin name = *IO_L5P,        		Sch name = EXP-IO2_P
+NET "cmd[1]"  LOC = "M11" | SLEW = SLOW | DRIVE = 16;# Bank = 2,  Pin name = IO_L14P_D11,        	Sch name = EXP-IO3_P
+NET "cmd[2]"  LOC = "N10" | SLEW = SLOW | DRIVE = 16;# Bank = 2,  Pin name = *IO_L15P,        		Sch name = EXP-IO4_P
+NET "cmd[3]"  LOC = "M10" | SLEW = SLOW | DRIVE = 16;# Bank = 2,  Pin name = IO_L16P,        		Sch name = EXP-IO5_P
+NET "cmd[4]"  LOC = "R8" | SLEW = SLOW | DRIVE = 16;# Bank = 2,  Pin name = *IO_L19P,        		Sch name = EXP-IO6_P
+NET "cmd[5]"  LOC = "U7" | SLEW = SLOW | DRIVE = 16;# Bank = 2,  Pin name = *IO_L20P,        		Sch name = EXP-IO7_P
+NET "cmd[6]"  LOC = "N7" | SLEW = SLOW | DRIVE = 16;# Bank = 2,  Pin name = *IO_L22P,        		Sch name = EXP-IO8_P
+NET "cmd[7]"  LOC = "N6" | SLEW = SLOW | DRIVE = 16;# Bank = 2,  Pin name = IO_L23P,        		Sch name = EXP-IO9_P
+NET "data_in"  LOC = "U5" | IOSTANDARD = LVCMOS33; # Bank = 2,  Pin name = IO_L29P_GCLK3,        	Sch name = EXP-IO10_P
 #NET "data_in"  LOC = "V9"; # Bank = 2,  Pin name = IO_L29P_GCLK3,        	Sch name = EXP-IO10_P
 
-NET "rx_idle" LOC = "U15";  # Bank = 2,  Pin name = *IO_L44P,        		Sch name = EXP-IO16_P
-NET "rx_packet" LOC = "U13";  # Bank = 2,  Pin name = IO_L45P,        		Sch name = EXP-IO17_P
+NET "rx_idle" LOC = "T3";  # Bank = 2,  Pin name = *IO_L44P,        		Sch name = EXP-IO16_P
+NET "rx_packet" LOC = "R3";  # Bank = 2,  Pin name = IO_L45P,        		Sch name = EXP-IO17_P
 
 # onBoard SWITCHES
 NET "SW0" LOC = "A10" | IOSTANDARD = LVCMOS25; # Bank = 0, Pin name = IO_L37N_GCLK12,      	Sch name = SW0
