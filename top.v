@@ -32,12 +32,14 @@ module top(
     input data_in, //data input from prototype sensor chip
     input CLK, //100Mhz clock from crystal
     input Reset, //Reset button on the ATLYS demo board.
-	 input SW0
+	 input SW0,
+	 output test
     );
 	 
 wire [1:0] rx_extra; //Not used
 assign rx_idle = rx_extra[0]; //Ditto
 assign rx_packet = rx_extra[1]; //Still not used
+assign test = cmd[4];
 
 //The module in charge of controlling the uart and fifos. The three clocks are 
 //driven by the PLL built into the Spartan 6 chip. Reset comes from the external

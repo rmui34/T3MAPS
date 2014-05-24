@@ -6,7 +6,7 @@ import os
 import threading
 
 BAUD = 9600
-COMPORT = 'COM3'
+COMPORT = 'COM4'
 VAL = 500
 TIMEOUT = None;
 #There are some predefined commands:
@@ -65,6 +65,8 @@ def auto(port):
         port.open()
         read_thread = threading.Thread(target=readData, args=port)
         read_thread.start()
+
+        print "hey"
         commandString = patternRead()
         byteCMDString = convertCMDString(commandString)
         check = raw_input("Are you sure you want to run? (Y/N): ")
@@ -226,6 +228,44 @@ def patternRead():
         shiftData.write(pinDict[8].rstrip())
         shiftData.close()
         return genFinalBits(stringList)
+
+def binary_string(x,nbits=5,invert=False):
+    """Return an nbit long string of the binary digits of int(x). """
+    blist = filled_binary_list(x,nbits)
+    if not invert:
+        return ''.join((str(x) for x in blist))
+    else:
+        return ''.join((str(x) for x in blist))[::-1]
+
+def binary_list(x):
+    """Return a list of the binary digits of int(x). """
+    x = int(x)
+    return binary_list(x/2) + [x%2] if x > 1 else [x]
+
+def filled_binary_list(x,nbits=5):
+    """Return a list of length nbits of the binary digits of int(x). """
+    vals = binary_list(x)
+    vals = [0]*(nbits - len(vals)) + vals
+    return vals[::-1]
+
+def get_control_pattern_pixel(col,config_bits='00000000',lden='0',S0='0',S1='0',config_mode='00', global_readout_enable='0', count_hits_not='0', count_enable='0', count_clear_not='0', SRDO_load='0'):
+    column_address = binary_string(col, 6)
+    return global_readout_enable + SRDO_load + NCout2 + count_hits_not + count_enable + count_clear_not + S0 + S1 + config_mode + config_bits + lden + SRCLR_SEL + HITLD_IN + NCout21_25 + column_address
+
+
+def get_dac_pattern(vth=150, DisVbn=49, VbpThStep=100, PrmpVbp=142, PrmpVbnFol=35, PrmpVbf=11): # fol35 vbp142 vbf11
+    default=binary_string(129,8,invert=True)
+    return default + default + default + default + binary_string(DisVbn,8) + default + default + default + default + default + default + binary_string(VbpThStep,8) + binary_string(PrmpVbp,8) + binary_string(PrmpVbnFol,8) + binary_string(vth,8) + binary_string(PrmpVbf,8) + default + default
+
+
+def get_control_pattern(global_readout_enable='0', count_hits_not='0', count_enable='0', count_clear_not='0', config_mode = '00', SRDO_load='0', S0='0', S1='0', col=None):
+    if col is None:
+        column_address = '111111'
+    else:
+        column_address = binary_string(col, 6)
+    return global_readout_enable + SRDO_load + NCout2 + count_hits_not + count_enable + count_clear_not + S0 + S1 + config_mode + LD_IN0_7 + LDENABLE_SEL + SRCLR_SEL + HITLD_IN + NCout21_25 + column_address
+
+
 
 """
 takes a 2d array and creates a string that is the serial
