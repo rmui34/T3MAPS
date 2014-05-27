@@ -64,16 +64,26 @@ def manual(port):
 
 def readData(port,lenData):
     """Reads data from the serial port to a file."""
+    final=""
     shiftData = open('shiftData.txt', 'wb')
     FPGA_write(port,TRANSMIT,False)
-    shiftData.write(port.read(lenData-1))
+    data = port.read(lenDatad)
+    for datum in data:
+        temp = int(ord(datum))
+        if(temp == 255):
+            final+='1'
+        elif(temp == 0):
+            final+='0'
+        else:
+            raise Exception
+    shiftData.write(final)
     shiftData.close()
     print("Here")
 
 
 def convertToRaw(byte):
     """Converts 8 bits into a format that pyserial
-    will convert into the correct pattern"""
+will convert into the correct pattern"""
     if(len(byte) == 8):
             temp = hex(int(byte, 2)) #Crazy but it works
             temp2 = temp[2:4]
@@ -86,7 +96,7 @@ def convertToRaw(byte):
 
 def convertCMDString(stringList):
     """Takes a string and converts it entirely to the raw bit format
-    using the above method."""
+using the above method."""
     byteList = ''
     for x in range(0,len(stringList),8):
         byteList += convertToRaw(stringList[x:x+8])
@@ -95,9 +105,9 @@ def convertCMDString(stringList):
 
 def FPGA_write(port, commandString, RX_ON = True):
     """Writes data to the FPGA system using pyserial.
-    By default, the method will assume that you
-    need to use the RX flag. For testing purposes, using RX_ON
-    False will result in just the byte you specify being sent."""
+By default, the method will assume that you
+need to use the RX flag. For testing purposes, using RX_ON
+False will result in just the byte you specify being sent."""
     if(port.isOpen()):
         if(RX_ON):
             port.write(convertToRaw(RX))
@@ -112,7 +122,7 @@ def FPGA_write(port, commandString, RX_ON = True):
 
 def configRead():
     """Generates the bit pattern from pix.py, then returns that pattern
-    as a bitarray."""
+as a bitarray."""
     commandDict = _gen_command((get_dac_pattern()[::-1]+get_control_pattern(63)[::-1]), config = True)
     stringList = []
     for i in range(8):
@@ -139,21 +149,21 @@ def get_dac_pattern(vth=150, DisVbn=49, VbpThStep=100, PrmpVbp=142, PrmpVbnFol=3
 
 def _gen_command(pattern, load_dacs=True, load_control=True, config=False):
         """Generate a command dictionary
-        if config set true, generate a config command, else generate a column command
-        a pulse on load_dacs loads the first 144 bit in the config shift register
-        a pulse on load_control loads the  last 32 bit in the config shift register"""
+if config set true, generate a config command, else generate a column command
+a pulse on load_dacs loads the first 144 bit in the config shift register
+a pulse on load_control loads the last 32 bit in the config shift register"""
         load_dacs = '1' if load_dacs else '0'
         load_control = '1' if load_control else '0'
 
-        SregPat=''.join([bit*2 for bit in pattern])
-        ClkPat=generate_clock(len(pattern))
+        SregPat=''.join([bit*2 for bit in pattern])+4*'0'
+        ClkPat=generate_clock(len(pattern))+4*'0'
 
         # Make sure the load (ctrl and dac) are set correctly
-        LDZeroLengthBefore= len(SregPat) - 1
-        LDPat='0'*LDZeroLengthBefore + load_control
-        LD_dacsPat='0'*LDZeroLengthBefore + load_dacs
+        LDZeroLengthBefore= len(SregPat) - 3
+        LDPat='0'*LDZeroLengthBefore + load_control*2+'0'
+        LD_dacsPat='0'*LDZeroLengthBefore + load_dacs*2+'0'
         emptyPat='0'*len(LDPat)
-        SlAltBusPat='1'*len(LDPat)
+        SlAltBusPat='1'*(len(LDPat)-1)+'0'
 
         if(config):
             commands_dict = {'Stbld':LDPat,'Dacld':LD_dacsPat,'GCfgCK':ClkPat,'SRIN_ALL':SregPat,'SRCK_G':emptyPat,'SlAltBus':SlAltBusPat,'NU':emptyPat}
