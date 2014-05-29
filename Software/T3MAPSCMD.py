@@ -2,6 +2,16 @@ __author__ = 'Maximilian Golub','Bo Wang'
 import serial
 
 BAUD = 9600
+<<<<<<< HEAD
+COMPORT = '/dev/ptyp3'
+VAL = 500
+TIMEOUT = None;
+#There are some predefined commands:
+#To write data to the FPGA: 11111111
+#The write command bit: 01111111
+#This writes out to T3MAPS, and collects data
+#To transmit data back to the computer: 01111110
+=======
 COMPORT = 5
 TIMEOUT = None
 MAXROWS = 64
@@ -21,6 +31,7 @@ The write command bit: 01111111
 This writes out to T3MAPS, and collects data
 To transmit data back to the computer: 01111110"""
 
+>>>>>>> State-Communication
 RX = '11111111'
 RX_OFF = '11111110'
 WRITE = '01111111'
