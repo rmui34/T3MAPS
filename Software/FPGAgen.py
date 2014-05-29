@@ -154,6 +154,14 @@ Will not lose data due to built in buffer in computer"""
     len_Data=commonSetup(port,commandDict)
     readData(port, len_Data)
 
+def analog_test(port,type):
+    if type == 'small':
+        manual(port,Command.set_config(vth=150, config_mode = '11')) #for small pixel
+    elif type == 'large':
+        manual(port,Command.set_config(150, PrmpVbp = 244, PrmpVbf = 1, config_mode = '11'))#for large pixel
+    manual(port,Command.hitor_hit_inject(is_hit_or=True,all=True,enable=True))
+    manual(port,Command.hitor_hit_inject(is_hit_or=False,all=True,enable=False))
+
 #Call the main method upon execution.
 if __name__ == "__main__":
     port = serial.Serial(port=COMPORT,baudrate=BAUD, bytesize=8,stopbits=1, timeout=TIMEOUT)
