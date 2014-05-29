@@ -1,7 +1,7 @@
 ##############################################################
 #
 # Xilinx Core Generator version 14.7
-# Date: Mon Mar 10 05:22:12 2014
+# Date: Sun May 18 23:26:30 2014
 #
 ##############################################################
 #
@@ -109,7 +109,7 @@ CSET dclk_port=DCLK
 CSET dcm_clk_feedback=2X
 CSET dcm_clk_out1_port=CLK2X
 CSET dcm_clk_out2_port=CLK2X
-CSET dcm_clk_out3_port=CLKFX
+CSET dcm_clk_out3_port=CLK0
 CSET dcm_clk_out4_port=CLKFX
 CSET dcm_clk_out5_port=CLK0
 CSET dcm_clk_out6_port=CLK0
@@ -266,4 +266,4 @@ CSET use_status=false
 MISC pkg_timestamp=2012-05-10T12:44:55Z
 # END Extra information
 GENERATE
-# CRC: 76a00469
+# CRC: 7eaea9ed

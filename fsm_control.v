@@ -29,12 +29,13 @@
 	 input tx_busy,
 	 input wr_ack,
 	 input rd_ack,
+	 input SW0,
 	 output [7:0] LED,
     output wr_en1,
     output wr_en2,
     output rd_en1,
     output rd_en2,
-    output tx_en
+	 output tx_en
     );
 	 
 //registers below used in FSM and other sequential logic 
@@ -100,25 +101,48 @@ begin: FSM
 					reg_LED[4] <= 1'b0;
 					reg_LED[2:1] <= 3'b00; //Clear the other LEDs
 				end	
-			DATA: if (rx_byte == 8'b11111110 & rx_ready) begin //signal to stop receiving data into fifo1
+			DATA: if (rx_byte == 8'b11111110 & rx_ready & SW0) begin //signal to stop receiving data into fifo1
 						state <= IDLE;
 						reg_LED[7] <= 0;
+					end else if (rx_byte == 8'b11111110 & rx_ready & !SW0) begin //Long way to do this...
+						state <= WRITE;
+						reg_LED[7] <= 0;
+						reg_wr_en1 <= 1'b0; //Next five lines reset all fifo/uart control registers to
+						reg_wr_en2 <= 1'b0; //0 since each state enables what it needs. 
+						reg_rd_en1 <= 1'b0;
+						reg_rd_en2 <= 1'b0;
+						reg_en_tx <= 1'b0;	
+						reg_LED[0] <= 1'b1; //Set the idle LED true
+						reg_LED[4] <= 1'b0;
+						reg_LED[2:1] <= 3'b00; //Clear the other LEDs
 					end else begin
 						if (rx_ready & rx_byte != 8'b11111111) begin
 							reg_LED[7] <= 1'b0;
-							reg_wr_en1 <= 1; //enable fifo1 write 
+							reg_wr_en1 <= 1; //enable fifo1 write
+							reg_LED[6] <= 1'b0; //Turn off transmit light
 						end
-						if(wr_ack) begin //put outside if block
+						if(wr_ack) begin //make sure double write does not occur
 							reg_wr_en1 <= 0; 
 						end
-						reg_LED[7] <= 1'b1;
+						reg_LED[7] <= 1'b1; //(Why is this here???)
 						reg_LED[1] <= 1'b1; //enable LED1 to indicate state. 
 						state <= DATA; //remain in data state.
 				end
 			//review this maybe
-			WRITE:if (fifoEmpty1) begin //If fifo1 is empty, then either a write error occured or we
+			WRITE:if (fifoEmpty1 & SW0) begin //If fifo1 is empty, then either a write error occured or we are done
 					reg_LED[3] <= 1'b1;    //signal write state finishing.
-					state <= IDLE;			  //go back to idle state. 		   
+					state <= IDLE;			  //go back to idle state. 	
+				end else if (fifoEmpty1 & !SW0) begin 
+					reg_LED[3] <= 1'b1;
+					state <= TRANSMIT;
+					reg_wr_en1 <= 1'b0; //Next five lines reset all fifo/uart control registers to
+					reg_wr_en2 <= 1'b0; //0 since each state enables what it needs. 
+					reg_rd_en1 <= 1'b0;
+					reg_rd_en2 <= 1'b0;
+					reg_en_tx <= 1'b0;	
+					reg_LED[0] <= 1'b1; //Set the idle LED true
+					reg_LED[4] <= 1'b0;
+					reg_LED[2:1] <= 3'b00;
 				end else begin
 					reg_LED[3] <= 1'b0;	  //have finished outputting all of the data in fifo1.
 					reg_rd_en1 <= 1'b1;     //enable fifo1 read. 
@@ -127,7 +151,7 @@ begin: FSM
 					state <= WRITE;        //remain in write state.
 				end
 			//transmit data stored in fifo2 to uart
-			TRANSMIT: if (fifoEmpty2 && ~tx_busy) begin //stop transmitting. This may need to be modifed.
+			TRANSMIT: if (fifoEmpty2 & ~tx_busy) begin //stop transmitting. This may need to be modifed.
 					state <= IDLE; //Go back to idle state. Should rewrite to avoid sending a signal...
 					reg_LED[6] <= 1'b1; //Signal Transmit finished. 
 					end else begin
@@ -148,27 +172,6 @@ begin: FSM
 							reg_LED[4] <= 1'b0;
 						end
 						state <= TRANSMIT;  //keep transmitting. 
-						
-					/*
-						reg_LED[6] <= 1'b0;
-						reg_LED[0] <= 1'b0;
-						reg_en_tx <= 1'b1;
-						if(~tx_busy) begin 
-							reg_rd_en2 <= 1'b1; //enable reading from fifo2
-						end else begin
-							reg_rd_en2 <= 1'b0; //wait for tx
-						end
-						
-						if (rd_ack) begin
-							reg_LED[4] <= 1'b1; //signal the state
-						end
-						else begin 
-							reg_LED[4] <= 1'b0;
-						end
-						
-						reg_en_tx <= 1'b0;
-						state <= TRANSMIT;  //keep transmitting. 
-						*/
 					end		
 			default: state <= IDLE; //This is the default state, waiting for data
 		endcase
@@ -183,10 +186,6 @@ begin: FSM
 			reg_LED[5] <= 1'b0; //otherwise everything is fine. 
 		end
 	end
-	
-	//LED logic below
-	
-	
 end
 
 endmodule

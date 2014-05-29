@@ -1,7 +1,7 @@
 ##############################################################
 #
 # Xilinx Core Generator version 14.7
-# Date: Mon Feb 03 08:44:46 2014
+# Date: Sun May 18 23:08:08 2014
 #
 ##############################################################
 #
@@ -203,11 +203,11 @@ CSET write_acknowledge_flag=true
 CSET write_acknowledge_sense=Active_High
 CSET write_clock_frequency=1
 CSET write_data_count=true
-CSET write_data_count_width=11
+CSET write_data_count_width=10
 CSET wuser_width=1
 # END Parameters
 # BEGIN Extra information
 MISC pkg_timestamp=2012-11-19T12:39:56Z
 # END Extra information
 GENERATE
-# CRC: bb0270f5
+# CRC: f2ebddea

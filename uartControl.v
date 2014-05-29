@@ -26,6 +26,7 @@ module uartControl(
 	input 	lock,
 	input	 	rx,
 	input 	data,
+	input 	SW0,
 	output 	tx,
 	output 	[7:0] cmd,
 	output 	[7:0] LED,
@@ -33,8 +34,6 @@ module uartControl(
 	output 	[1:0] rx_extra
    );
 
-//wire [10:0] wr_data_count;
-//wire [1:0] rx_extra; //hooked to nothing
 wire [7:0] tx_byte; //Used to prevent sythesis from assuming a 1 bit wire
 wire [7:0] rx_byte; //Used to prevent sythesis from assuming a 1 bit wire
 wire rst; //True reset for modules
@@ -47,16 +46,6 @@ async_transmitter tx_mod(
 	.TxD			(tx),
 	.TxD_busy	(tx_busy)
 );
-
-/*
-UART_TX_CTRL TX(
-	.CLK		(clk_100),
-	.SEND		(tx_en),
-	.DATA		(tx_byte),
-	.READY	(ready),
-	.UART_TX	(tx)
-);
-*/
 
 async_receiver rx_mod(
 	.clk				(clk_100),
@@ -107,6 +96,7 @@ fsm_control fsm1(
 	.wr_en2		(wr_en2),
 	.rd_en1		(rd_en1),
 	.rd_en2		(rd_en2),
+	.SW0			(SW0),
 	.tx_en		(tx_en),
 	.tx_busy		(tx_busy),
 	.fifoEmpty1 (fifoEmpty1),

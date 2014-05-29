@@ -31,6 +31,7 @@ module uart_test;
 	reg CLK;
 	reg Reset;
 	wire data_in;
+	reg SW0;
 
 	// Outputs
 	wire [7:0] cmd;
@@ -47,7 +48,8 @@ module uart_test;
 		.uartRx_pin(uartRx_pin), 
 		.CLK(CLK), 
 		.Reset(Reset),
-		.data_in(data_in)
+		.data_in(data_in),
+		.SW0(SW0)
 	);
 
 	assign data_in = cmd[6];
@@ -56,6 +58,7 @@ module uart_test;
 		// Initialize Inputs
 		uartRx_pin = 1;
 		CLK = 0;
+		SW0 = 0;
 		Reset = 1;
 		#100;
 		Reset = 0;
@@ -172,6 +175,7 @@ module uart_test;
       #bit_time;
 		uartRx_pin = 1; //STOP
       #bit_time;
+		/*
 		////////////////////// Enable Write
 		#bit_time;
 		uartRx_pin = 0; //Start
@@ -218,7 +222,7 @@ module uart_test;
       #bit_time;
 		uartRx_pin = 1; //STOP
       #bit_time;
-		
+		*/
 		#bit_time;
 		// Add stimulus here
 
