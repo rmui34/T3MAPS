@@ -6,20 +6,29 @@ COMPORT = 5
 TIMEOUT = None
 MAXROWS = 64
 
-pinDict = {0:'SRIN_ALL',1:'SRCK_G',2:'GCfgCK',3:'Dacld',4:'Stbld',5:'SlAltBus',6:'NU',7:'NU'}
+pinDict = {0:'SRIN_ALL',
+           1:'SRCK_G',
+           2:'GCfgCK',
+           3:'Dacld',
+           4:'Stbld',
+           5:'SlAltBus',
+           6:'NU',
+           7:'NU'}
 
 """There are some predefined commands:
 To write data to the FPGA: 11111111
 The write command bit: 01111111
 This writes out to T3MAPS, and collects data
 To transmit data back to the computer: 01111110"""
+
 RX = '11111111'
 RX_OFF = '11111110'
 WRITE = '01111111'
 TRANSMIT = '01111110'
-TRANSMIT_OFF = '10111111'
+
 
 def generate_clock(length, n=1, start='0'):
+    """Generates a clock pattern"""8
     if start not in ['0','1']:
         print "Invalid start specified for clock_pattern, using default '0'."
         start = '0'
@@ -30,10 +39,24 @@ def generate_clock(length, n=1, start='0'):
     return ''.join((start*n + end*n for x in xrange(length)))
 
 def binary_string(string,bits):
+    """Creates a binary string"""
     b_string = bin(int(string))[2:]
     if(len(b_string) < bits):
         b_string = '0'*(bits-len(b_string))+b_string
     return b_string
+
+def convertFPGAHits(data):
+    """converts FPGA FF to 1 and otherwise 0"""
+    final = ""
+    for datum in data:
+        temp = int(ord(datum))
+        if(temp == 255):
+            final+='1'
+        elif(temp == 0):
+            final+='0'
+        else:
+            raise Exception
+    return final
 
 class RawConversionException(Exception):
         def __init__(self, value):
@@ -42,13 +65,11 @@ class RawConversionException(Exception):
                 return repr(self.value)
 
 def manual(port):
-    """The manual method of controlling T3MAPS. The user must manually verify each step"""
-    port.close()
-    port.open()
-    commandString = configRead()
-    byteCMDString = convertCMDString(commandString)
-    len_Data=FPGA_write(port,byteCMDString)
+    """The manual method of controlling T3MAPS.
+    The user must manually verify each step"""
+    len_Data=commonSetup(port)
     Winput = raw_input("Write data to T3MAPS? (y/n): ")
+
     if (Winput.lower() == "y"):
         FPGA_write(port,WRITE,False)
         Winput2 = raw_input("Read data from FGPA fifo? (y/n): ")
@@ -62,41 +83,45 @@ def manual(port):
         print("Write aborted")
         port.close()
 
+def auto(port):
+    """The automatic method to write a stream to control T3MAPS.
+    Will not lose data due to built in buffer in computer"""
+    len_Data=commonSetup(port)
+    readData(port, len_Data)
+
+def commonSetup(port):
+    """common setup between auto and manual"""
+    port.close()
+    port.open()
+    commandString = configRead()
+    byteCMDString = convertCMDString(commandString)
+    return len_Data = FPGA_write(port,byteCMDString)
+
 def readData(port,lenData):
     """Reads data from the serial port to a file."""
-    final=""
     shiftData = open('shiftData.txt', 'wb')
     FPGA_write(port,TRANSMIT,False)
     data = port.read(lenDatad)
-    for datum in data:
-        temp = int(ord(datum))
-        if(temp == 255):
-            final+='1'
-        elif(temp == 0):
-            final+='0'
-        else:
-            raise Exception
+    final = convertFPGAHits(data)
     shiftData.write(final)
     shiftData.close()
-    print("Here")
-
 
 def convertToRaw(byte):
     """Converts 8 bits into a format that pyserial
-will convert into the correct pattern"""
+       will convert into the correct pattern"""
     if(len(byte) == 8):
-            temp = hex(int(byte, 2)) #Crazy but it works
-            temp2 = temp[2:4]
-            if (len(temp2) == 1):
-                    return ('0'+temp2).decode('hex')
-            else:
-                    return temp2.decode('hex')
+        temp = hex(int(byte, 2)) #Crazy but it works
+        temp2 = temp[2:4]
+        if (len(temp2) == 1):
+            return ('0'+temp2).decode('hex')
+        else:
+            return temp2.decode('hex')
     else:
-             raise RawConversionException
+        raise RawConversionException
 
 def convertCMDString(stringList):
     """Takes a string and converts it entirely to the raw bit format
-using the above method."""
+    using the above method."""
     byteList = ''
     for x in range(0,len(stringList),8):
         byteList += convertToRaw(stringList[x:x+8])
@@ -105,9 +130,9 @@ using the above method."""
 
 def FPGA_write(port, commandString, RX_ON = True):
     """Writes data to the FPGA system using pyserial.
-By default, the method will assume that you
-need to use the RX flag. For testing purposes, using RX_ON
-False will result in just the byte you specify being sent."""
+    By default, the method will assume that you
+    need to use the RX flag. For testing purposes, using RX_ON
+    False will result in just the byte you specify being sent."""
     if(port.isOpen()):
         if(RX_ON):
             port.write(convertToRaw(RX))
@@ -119,10 +144,11 @@ False will result in just the byte you specify being sent."""
             port.write(convertToRaw(commandString))
     else:
         print("Serial port failure")
+        raise Exception
 
 def configRead():
     """Generates the bit pattern from pix.py, then returns that pattern
-as a bitarray."""
+    as a bitarray."""
     commandDict = _gen_command((get_dac_pattern()[::-1]+get_control_pattern(63)[::-1]), config = True)
     stringList = []
     for i in range(8):
@@ -148,28 +174,27 @@ def get_dac_pattern(vth=150, DisVbn=49, VbpThStep=100, PrmpVbp=142, PrmpVbnFol=3
 
 
 def _gen_command(pattern, load_dacs=True, load_control=True, config=False):
-        """Generate a command dictionary
-if config set true, generate a config command, else generate a column command
-a pulse on load_dacs loads the first 144 bit in the config shift register
-a pulse on load_control loads the last 32 bit in the config shift register"""
-        load_dacs = '1' if load_dacs else '0'
-        load_control = '1' if load_control else '0'
+    """Generate a command dictionary
+    if config set true, generate a config command, else generate a column command
+    a pulse on load_dacs loads the first 144 bit in the config shift register
+    a pulse on load_control loads the last 32 bit in the config shift register"""
+    load_dacs = '1' if load_dacs else '0'
+    load_control = '1' if load_control else '0'
+    SregPat=''.join([bit*2 for bit in pattern])+4*'0'
+    ClkPat=generate_clock(len(pattern))+4*'0'
 
-        SregPat=''.join([bit*2 for bit in pattern])+4*'0'
-        ClkPat=generate_clock(len(pattern))+4*'0'
+    # Make sure the load (ctrl and dac) are set correctly
+    LDZeroLengthBefore= len(SregPat) - 3
+    LDPat='0'*LDZeroLengthBefore + load_control*2+'0'
+    LD_dacsPat='0'*LDZeroLengthBefore + load_dacs*2+'0'
+    emptyPat='0'*len(LDPat)
+    SlAltBusPat='1'*(len(LDPat)-1)+'0'
 
-        # Make sure the load (ctrl and dac) are set correctly
-        LDZeroLengthBefore= len(SregPat) - 3
-        LDPat='0'*LDZeroLengthBefore + load_control*2+'0'
-        LD_dacsPat='0'*LDZeroLengthBefore + load_dacs*2+'0'
-        emptyPat='0'*len(LDPat)
-        SlAltBusPat='1'*(len(LDPat)-1)+'0'
-
-        if(config):
-            commands_dict = {'Stbld':LDPat,'Dacld':LD_dacsPat,'GCfgCK':ClkPat,'SRIN_ALL':SregPat,'SRCK_G':emptyPat,'SlAltBus':SlAltBusPat,'NU':emptyPat}
-        else:
-            commands_dict = {'Stbld':emptyPat,'Dacld':emptyPat,'GCfgCK':emptyPat,'SRIN_ALL':SregPat,'SRCK_G':ClkPat,'SlAltBus':SlAltBusPat,'NU':emptyPat}
-        return commands_dict
+    if(config):
+        commands_dict = {'Stbld':LDPat,'Dacld':LD_dacsPat,'GCfgCK':ClkPat,'SRIN_ALL':SregPat,'SRCK_G':emptyPat,'SlAltBus':SlAltBusPat,'NU':emptyPat}
+    else:
+        commands_dict = {'Stbld':emptyPat,'Dacld':emptyPat,'GCfgCK':emptyPat,'SRIN_ALL':SregPat,'SRCK_G':ClkPat,'SlAltBus':SlAltBusPat,'NU':emptyPat}
+    return commands_dict
 
 def convertToByte(list):
     s=""
