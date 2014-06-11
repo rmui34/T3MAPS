@@ -4,7 +4,7 @@ import Command
 #######################################################################################################################
 #Settings for serial communication, predefined FPGA commands and pin mapping
 BAUD = 9600
-COMPORT = 5
+COMPORT = 3
 TIMEOUT = 5
 
 """There are some predefined commands:
@@ -24,7 +24,7 @@ pinDict = {0:'SRIN_ALL',
            2:'GCfgCK',
            3:'Dacld',
            4:'Stbld',
-           5:'SlAltBus',
+           5:'NU',
            6:'NU',
            7:'NU'}
 #######################################################################################################################
@@ -39,32 +39,13 @@ class RawConversionException(Exception):
 #Conversion methods for serial communication
 def convertToByte(list):
     """Takes a list and output the list as a data bus list"""
-    s=""
+    cmd=""
     for i in range(len(list[0])):
+        temp = ""
         for j in range(len(list)-1,-1,-1):
-            s+=(list[j][i])
-    return s
-
-def convertToRaw(byte):
-    """Converts 8 bits into a format that pyserial
-    will convert into the correct pattern"""
-    if(len(byte) == 8):
-            temp = hex(int(byte, 2)) #Crazy but it works
-            temp2 = temp[2:4]
-            if (len(temp2) == 1):
-                    return ('0'+temp2).decode('hex')
-            else:
-                    return temp2.decode('hex')
-    else:
-             raise RawConversionException
-
-def convertCMDString(stringList):
-    """Takes a string and converts it entirely to the raw bit format
-    using the above method."""
-    byteList = ''
-    for x in range(0,len(stringList),8):
-        byteList += convertToRaw(stringList[x:x+8])
-    return byteList
+            temp+=(list[j][i])
+        cmd+=(chr(int(temp,2)))
+    return cmd
 
 def convertFPGAHits(data):
     """converts readout output file FF to 1 and otherwise 0"""
@@ -85,13 +66,16 @@ def commandRead(commandDict):
     stringList = []
     for i in range(8):
         stringList.append(commandDict[pinDict[i]])
-    shiftData = open('shiftData_before.txt', 'w')
+    shiftData = open('shiftData_before.txt', 'a')
     for s in pinDict.values():
         if (s != "NU"):
             shiftData.write(s+"\n")
             shiftData.write(commandDict[s]+"\n")
     shiftData.close()
     return convertToByte(stringList)
+
+def convertToRaw(string):
+    return chr(int(string,2))
 
 def FPGA_write(port, commandString, RX_ON = True):
     """Writes data to the FPGA system using pyserial.
@@ -113,19 +97,18 @@ def FPGA_write(port, commandString, RX_ON = True):
 
 def readData(port,lenData):
     """Reads data from the serial port to a file called shiftData.txt."""
-    shiftData = open('shiftData.txt', 'wb')
+    shiftData = open('shiftData.txt', 'a')
     FPGA_write(port,TRANSMIT,False)
-    data = port.read(lenData)
+    data = port.read(lenData-1)
     final = convertFPGAHits(data)
-    shiftData.write(final)
+    shiftData.write(final+"\n")
     shiftData.close()
 
 def commonSetup(port,commandDict):
     """Common setup between auto and manual methods"""
     port.close()
     port.open()
-    commandString = commandRead(commandDict)
-    byteCMDString = convertCMDString(commandString)
+    byteCMDString = commandRead(commandDict)
     len_Data = FPGA_write(port,byteCMDString)
     return len_Data
 
@@ -154,15 +137,29 @@ Will not lose data due to built in buffer in computer"""
     len_Data=commonSetup(port,commandDict)
     readData(port, len_Data)
 
-def analog_test(port,type):
+
+def analog_Test(port,type):
     if type == 'small':
-        manual(port,Command.set_config(vth=150, config_mode = '11')) #for small pixel
+        auto(port,Command.set_config(vth=150, config_mode = '11')) #for small pixel
     elif type == 'large':
-        manual(port,Command.set_config(150, PrmpVbp = 244, PrmpVbf = 1, config_mode = '11'))#for large pixel
-    manual(port,Command.hitor_hit_inject(is_hit_or=True,all=True,enable=True))
-    manual(port,Command.hitor_hit_inject(is_hit_or=False,all=True,enable=False))
+        auto(port,Command.set_config(150, PrmpVbp = 244, PrmpVbf = 1, config_mode = '11'))#for large pixel
+    auto(port,Command.hitor_hit_inject(is_hit_or=True,all=True,enable=True))
+    auto(port,Command.hitor_hit_inject(is_hit_or=False,all=True,enable=False))
+
+def basic_Test(port,num):
+    if(num>176):
+        raise Exception
+    for i in range(0,num):
+        auto(port,Command.command_Dict_combine(Command.SR_TEST(i),Command.SR_TEST(i)))
 
 #Call the main method upon execution.
 if __name__ == "__main__":
-    port = serial.Serial(port=COMPORT,baudrate=BAUD, bytesize=8,stopbits=1, timeout=TIMEOUT)
-    manual(port,Command.set_config())
+    port = serial.Serial(port=COMPORT,baudrate=BAUD, bytesize=8,stopbits=2, timeout=TIMEOUT)
+    #auto(port,Command.set_config())
+    #auto(port,Command.set_config())
+    #basic_Test(port,1)
+    #col = raw_input("Which Column to point to?")
+    auto(port,Command.point_to_column(1,"00"))
+    auto(port,Command._gen_single_command('1'*64,load_control=False,config=True))
+    #auto(port,Command.point_to_column(1,"00"))
+    #auto()

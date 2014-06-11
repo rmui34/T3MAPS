@@ -16,6 +16,7 @@ SRCLR_SEL='0'
 NCOUT21_25='00000'
 LSB_SIX_BITS=GLOBAL_READOUT_ENABLE+SRDO_LOAD+NCOUT2+COUNT_HITS_NOT+COUNT_ENABLE+COUNT_CLEAR_NOT
 TDAC = '00000'
+CLOCK_UNIT_DURATION = 2
 
 #######################################################################################################################
 # Utility Functions
@@ -75,13 +76,13 @@ def _gen_single_command(pattern, load_dacs=False, load_control=True, config=True
     load_dacs = '1' if load_dacs else '0'
     load_control = '1' if load_control else '0'
 
-    SregPat=''.join([bit*2 for bit in pattern])+4*'0'+'1'
-    ClkPat=generate_clock(len(pattern))+4*'0'+'1'
+    SregPat=''.join([bit*CLOCK_UNIT_DURATION for bit in pattern])+CLOCK_UNIT_DURATION*'0'
+    ClkPat=generate_clock(len(pattern),CLOCK_UNIT_DURATION/2)+CLOCK_UNIT_DURATION*'0'
 
     # Make sure the load (ctrl and dac) are set correctly
-    LDZeroLengthBefore= len(SregPat) - 3
-    LDPat='0'*LDZeroLengthBefore + load_control*2+'0'
-    LD_dacsPat='0'*LDZeroLengthBefore + load_dacs*2+'0'
+    LDZeroLengthBefore= len(SregPat) - CLOCK_UNIT_DURATION - 1
+    LDPat='0'*LDZeroLengthBefore + load_control*CLOCK_UNIT_DURATION+'0'
+    LD_dacsPat='0'*LDZeroLengthBefore + load_dacs*CLOCK_UNIT_DURATION+'0'
     emptyPat='0'*len(LDPat)
     SlAltBusPat='1'*(len(LDPat)-1)+'0'
 
@@ -108,7 +109,7 @@ def point_to_column(col,config_mode):
     return _gen_single_command(get_control_pattern(col,config_mode))
 
 def load_pixel_reg(row,is_hit_or,num,enable):
-    return _gen_single_command(pixel_command(row,num,is_hit_or,enable))
+    return _gen_single_command(pixel_command(row,num,is_hit_or,enable),config=False)
 
 def load_ldbus(col,hit_or,hit,inject):
     return _gen_single_command(get_control_pattern(col,hit_or=str(hit_or),hit=str(hit),inject=str(inject),lden="1"))
@@ -131,3 +132,9 @@ def hitor_hit_inject(col=0,row=0,is_hit_or=True,single_pixel=False,single_column
         raise Exception
     return command_Dict_combine(point_to_column(col,config_mode),load_pixel_reg(row,is_hit_or,num,enable),load_ldbus(col,hit_or,hit,inject),point_to_column(col,config_mode))
 
+def SR_TEST(index):
+    """A bitpattern of a '1' only at the associated index, this is only used to test the shift register, check if everything is working
+    Clock into GcfgCK, Data into SRIN_ALL, Readout GcfgCK, DO NOT LOAD PATTERN
+    Index Starts at 0
+    """
+    return _gen_single_command('0'*index+'1'+'0'*(175-index),load_control=False)
