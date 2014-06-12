@@ -146,20 +146,26 @@ def analog_Test(port,type):
     auto(port,Command.hitor_hit_inject(is_hit_or=True,all=True,enable=True))
     auto(port,Command.hitor_hit_inject(is_hit_or=False,all=True,enable=False))
 
-def basic_Test(port,num):
+def Test_Pattern_Gcfg(port,num):
+    """This is to run the system with test patterns for Gcfg Register, it will
+    output a 1 at an index starting from 0, this way we can verify if that specific
+    bit is at the right place when we read it back"""
     if(num>176):
         raise Exception
     for i in range(0,num):
-        auto(port,Command.command_Dict_combine(Command.SR_TEST(i),Command.SR_TEST(i)))
+        auto(port,Command.command_Dict_combine(Command.Gcfg_TEST(i),Command.Gcfg_TEST(i)))
 
 #Call the main method upon execution.
 if __name__ == "__main__":
     port = serial.Serial(port=COMPORT,baudrate=BAUD, bytesize=8,stopbits=2, timeout=TIMEOUT)
     #auto(port,Command.set_config())
     #auto(port,Command.set_config())
-    #basic_Test(port,1)
+    #Test_Pattern_Gcfg(port,1)
     #col = raw_input("Which Column to point to?")
-    auto(port,Command.point_to_column(1,"00"))
-    auto(port,Command._gen_single_command('1'*64,load_control=False,config=True))
+    col = 7
+    row = 0
+    num = 64
+    auto(port,Command.Pixel_Array_Test_1(col,row,num))
+    auto(port,Command.Pixel_Array_Test_2(col,row,num))
     #auto(port,Command.point_to_column(1,"00"))
     #auto()

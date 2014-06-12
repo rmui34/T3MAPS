@@ -15,8 +15,8 @@ COUNT_CLEAR_NOT='0'
 SRCLR_SEL='0'
 NCOUT21_25='00000'
 LSB_SIX_BITS=GLOBAL_READOUT_ENABLE+SRDO_LOAD+NCOUT2+COUNT_HITS_NOT+COUNT_ENABLE+COUNT_CLEAR_NOT
-TDAC = '00000'
-CLOCK_UNIT_DURATION = 2
+CLOCK_UNIT_DURATION = 4
+LEN_CONFIG = 176
 
 #######################################################################################################################
 # Utility Functions
@@ -41,7 +41,7 @@ def binary_string(string,bits):
 #######################################################################################################################
 # Basic Command construction
 # Commands are reversed because we are using a shift register
-def get_control_pattern(col,hit_or = '0', hit='0',inject='0',lden='0',S0='0',S1='0', hitld_in = '0', config_mode='00'):
+def get_control_pattern(col,hit_or = '0', hit='0',inject='0',lden='0',S0='0',S1='0', hitld_in = '0', config_mode='00',TDAC="00000"):
     """This is the last 32 bits(Counting from LSB) out of 176 bits in the configuration register
     Whenever you want to generate a pixel command, you have to set the configuration first
     Every parameter can be found in FEI4 manual, lden is the load enable signal for pixel register"""
@@ -52,7 +52,7 @@ def get_dac_pattern(vth=150, DisVbn=49, VbpThStep=100, PrmpVbp=142, PrmpVbnFol=3
     """This is the first 144bit(Counting from LSB) out of 176 bits in the configuration register,
     It is only called once during the set_config command, and never changed afterwards"""
     default=binary_string(129,8)# just for padding, no special meaning
-    return (default*4 + binary_string(DisVbn,8) + default*6 + binary_string(VbpThStep,8) + binary_string(PrmpVbp,8) + binary_string(PrmpVbnFol,8) + binary_string(vth,8) + binary_string(PrmpVbf,8) + default*2)[::-1]
+    return ("00000000"+default*3 + binary_string(DisVbn,8) + default*6 + binary_string(VbpThStep,8) + binary_string(PrmpVbp,8) + binary_string(PrmpVbnFol,8) + binary_string(vth,8) + binary_string(PrmpVbf,8) + default+"00000000")[::-1]
 
 def pixel_command(row,num,is_hit_or=True,enable=True):
     """This method generates a pixel command, which start at row and enables num pixels after it.
@@ -75,21 +75,32 @@ def _gen_single_command(pattern, load_dacs=False, load_control=True, config=True
     By default, this does not load the first 144 bits"""
     load_dacs = '1' if load_dacs else '0'
     load_control = '1' if load_control else '0'
+    pull_down = '0'
+    LDPatLength=4
 
-    SregPat=''.join([bit*CLOCK_UNIT_DURATION for bit in pattern])+CLOCK_UNIT_DURATION*'0'
-    ClkPat=generate_clock(len(pattern),CLOCK_UNIT_DURATION/2)+CLOCK_UNIT_DURATION*'0'
+    if config:
+        length = LEN_CONFIG
+    else:
+        length = MAXROWS
+
+    SregData=''.join([bit*CLOCK_UNIT_DURATION for bit in pattern])
+    SregPat='0'+(length*CLOCK_UNIT_DURATION-len(SregData))*'0'+SregData+(1+LDPatLength)*'0'+pull_down
+    ClkData=generate_clock(length,CLOCK_UNIT_DURATION/2)
+    ClkPat = ClkData+(2+LDPatLength)*'0'+pull_down
 
     # Make sure the load (ctrl and dac) are set correctly
-    LDZeroLengthBefore= len(SregPat) - CLOCK_UNIT_DURATION - 1
-    LDPat='0'*LDZeroLengthBefore + load_control*CLOCK_UNIT_DURATION+'0'
-    LD_dacsPat='0'*LDZeroLengthBefore + load_dacs*CLOCK_UNIT_DURATION+'0'
-    emptyPat='0'*len(LDPat)
-    SlAltBusPat='1'*(len(LDPat)-1)+'0'
+    LDZeroLengthBefore= len(ClkData)+2
 
-    if(config):
-        commands_dict = {'Stbld':LDPat,'Dacld':LD_dacsPat,'GCfgCK':ClkPat,'SRIN_ALL':SregPat,'SRCK_G':emptyPat,'SlAltBus':SlAltBusPat,'NU':emptyPat}
+    LDPat='0'*LDZeroLengthBefore + load_control*LDPatLength+'0'
+    LD_dacsPat='0'*LDZeroLengthBefore + load_dacs*LDPatLength+'0'
+    emptyPat='0'*len(LDPat)
+
+    if config:
+        commands_dict = {'Stbld':LDPat,'Dacld':LD_dacsPat,'GCfgCK':ClkPat,'SRIN_ALL':SregPat,'SRCK_G':emptyPat,'NU':emptyPat}
     else:
-        commands_dict = {'Stbld':emptyPat,'Dacld':emptyPat,'GCfgCK':emptyPat,'SRIN_ALL':SregPat,'SRCK_G':ClkPat,'SlAltBus':SlAltBusPat,'NU':emptyPat}
+        commands_dict = {'Stbld':emptyPat,'Dacld':emptyPat,'GCfgCK':emptyPat,'SRIN_ALL':SregPat,'SRCK_G':ClkPat,'NU':emptyPat}
+
+    #print([len(i) for i in commands_dict.values()])
     return commands_dict
 
 def command_Dict_combine(*args):
@@ -102,14 +113,14 @@ def command_Dict_combine(*args):
 ########################################################################################################################
 #Complex command dictionary generation
 def set_config(vth=150,PrmpVbp=142,PrmpVbf=11,config_mode="00"):
-    return _gen_single_command(get_dac_pattern(vth,PrmpVbp,PrmpVbf)+get_control_pattern(63,config_mode),load_dacs=True)
+    return _gen_single_command(get_dac_pattern(vth=vth,PrmpVbp=PrmpVbp,PrmpVbf=PrmpVbf)+get_control_pattern(63,config_mode=config_mode),load_dacs=True)
 
 def point_to_column(col,config_mode):
     """Used only in pixel commands to point the shift_register to correct column"""
-    return _gen_single_command(get_control_pattern(col,config_mode))
+    return _gen_single_command(get_control_pattern(col,config_mode=config_mode))
 
 def load_pixel_reg(row,is_hit_or,num,enable):
-    return _gen_single_command(pixel_command(row,num,is_hit_or,enable),config=False)
+    return _gen_single_command(pixel_command(row=row,num=num,is_hit_or=is_hit_or,enable=enable),config=False)
 
 def load_ldbus(col,hit_or,hit,inject):
     return _gen_single_command(get_control_pattern(col,hit_or=str(hit_or),hit=str(hit),inject=str(inject),lden="1"))
@@ -132,9 +143,20 @@ def hitor_hit_inject(col=0,row=0,is_hit_or=True,single_pixel=False,single_column
         raise Exception
     return command_Dict_combine(point_to_column(col,config_mode),load_pixel_reg(row,is_hit_or,num,enable),load_ldbus(col,hit_or,hit,inject),point_to_column(col,config_mode))
 
-def SR_TEST(index):
+def Gcfg_TEST(index):
     """A bitpattern of a '1' only at the associated index, this is only used to test the shift register, check if everything is working
     Clock into GcfgCK, Data into SRIN_ALL, Readout GcfgCK, DO NOT LOAD PATTERN
     Index Starts at 0
     """
     return _gen_single_command('0'*index+'1'+'0'*(175-index),load_control=False)
+
+def Pixel_Array_Test_1(col,row,num):
+    """A bitpattern of a '1' only at the associated index, this is only used to test the pixel register, check if everything is working
+    Step 1: Clock into GcfgCk to send configuration,into SRIN_ALL to point to the column we want to test
+    Step 2: Select which pixel we want to load to. Clock SR_CK for this
+    Step 3: Set lden to True to load it into each 8 bit register of the individual pixels, Clock GcfgCK for this
+    Step 4: Repeat Step 2 and 3 again inorder to shift out what we have sent.(We should See data at SR_OUT)"""
+    return command_Dict_combine(point_to_column(col,"00"),load_pixel_reg(row,False,num,True),load_ldbus(col,1,0,0))
+
+def Pixel_Array_Test_2(col,row,num):
+    return command_Dict_combine(load_pixel_reg(row,False,num,True),load_ldbus(col,1,0,0),point_to_column(col,'00'))
