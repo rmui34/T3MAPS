@@ -1,6 +1,6 @@
-T3MAPS-ATLYS
+TMAPS-ATLYS
 ============
-Test
+
 The firmware code for the ATLYS dev board to control T3MAPS
 
 This branch is the most up to date, but is currently untested. Changes include:
